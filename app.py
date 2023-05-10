@@ -3,6 +3,13 @@ from celery import Celery
 import os
 from flask_mail import Mail, Message
 import requests
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from dotenv import load_dotenv
+from email.mime.application import MIMEApplication
+import os
+from os.path import basename
 
 app = Flask(__name__)
 mail= Mail(app)
@@ -47,29 +54,57 @@ def index():
         'body': 'This is a test email sent from a background Celery task.'
     }
 
+    print(email)
+
     if request.form['submit'] == 'Send':
         # send right away
         send_async_email.delay(email_data)
 
         flash('Sending email to {0}'.format(email))
-    
+
     else:
         # send in one minute
-        send_async_email.apply_async(args=[email_data], countdown=60)
+        send_async_email.apply_async(args=[email_data], countdown=10)
         flash('An email will be sent to {0} in one minute'.format(email))
 
     return redirect(url_for('index'))
 
+# @celery.task
+# def send_async_email(email_data):
+#     """Background task to send an email with Flask-Mail."""
+#     msg = Message(email_data['subject'],
+#                   sender=app.config['MAIL_DEFAULT_SENDER'],
+#                   recipients=[email_data['to']])
+    
+#     msg.body = email_data['body']
+
+#     with app.app_context():
+#         mail.send(msg)
+#         print('sent email')
+
 @celery.task
 def send_async_email(email_data):
-    """Background task to send an email with Flask-Mail."""
-    msg = Message(email_data['subject'],
-                  sender=app.config['MAIL_DEFAULT_SENDER'],
-                  recipients=[email_data['to']])
-    
-    msg.body = email_data['body']
-    with app.app_context():
-        mail.send(msg)
+
+    print('plis werk')
+
+    mail_content = email_data['body']
+
+    message = MIMEMultipart()
+
+    message['From'] = SENDER_ADDRESS
+    message['To'] = email_data['to']
+    message['Subject'] = email_data['subject']
+
+    message.attach(MIMEText(mail_content, 'plain'))
+
+    session = smtplib.SMTP('smtp.gmail.com', 587)
+    session.starttls()
+    session.login(SENDER_ADDRESS, SENDER_PASS)
+    text = message.as_string()
+    session.sendmail(SENDER_ADDRESS, email_data['to'], text)
+    session.quit()
+
+    print('Mail Sent')
 
 if __name__=='__main__':
 
