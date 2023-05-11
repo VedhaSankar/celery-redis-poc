@@ -1,5 +1,5 @@
 from flask import Flask, request, session, render_template, flash, redirect, url_for
-from celery import Celery
+import tasks
 import os
 from flask_mail import Mail, Message
 import requests
@@ -10,26 +10,13 @@ from dotenv import load_dotenv
 from email.mime.application import MIMEApplication
 import os
 from os.path import basename
-# from .celery import app as celery_app
 
-# __all__ = ['celery_app']
 app = Flask(__name__)
 mail= Mail(app)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
-
-
-# Celery configuration
-app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
-app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
-
-# Create Celery instance
-celery = Celery('app', broker=app.config['CELERY_BROKER_URL'])
-celery.conf.update(app.config)
-
 SENDER_ADDRESS  = os.environ.get('GMAIL_USER') 
 SENDER_PASS     = os.environ.get('GMAIL_PASSWORD')
-# EMAIL_LIST      = os.environ.get('EMAIL_LIST')
 
 
 app.config['MAIL_SERVER']='smtp.gmail.com'
@@ -45,11 +32,9 @@ def index():
 
     if request.method == 'GET':
 
-        return render_template('index.html', email=session.get('email', ''))
+        return render_template('index.html')
     
     email = request.form['email']
-    
-    session['email'] = email
 
     # send the email
     email_data = {
@@ -62,60 +47,16 @@ def index():
 
     if request.form['submit'] == 'Send':
         # send right away
-        send_async_email.delay(email_data)
+        tasks.send_async_email.delay(email_data)
 
         flash('Sending email to {0}'.format(email))
 
     else:
         # send in one minute
-        send_async_email.apply_async(args=[email_data], countdown=10)
+        tasks.send_async_email.apply_async(args=[email_data], countdown=60)
         flash('An email will be sent to {0} in one minute'.format(email))
 
     return redirect(url_for('index'))
-
-# @celery.task
-# def send_async_email(email_data):
-#     """Background task to send an email with Flask-Mail."""
-#     msg = Message(email_data['subject'],
-#                   sender=app.config['MAIL_DEFAULT_SENDER'],
-#                   recipients=[email_data['to']])
-    
-#     msg.body = email_data['body']
-
-#     with app.app_context():
-#         mail.send(msg)
-#         print('sent email')
-
-@celery.task()
-def send_async_email(email_data):
-
-    print('plis werk')
-
-    mail_content = email_data['body']
-
-    message = MIMEMultipart()
-
-    message['From'] = SENDER_ADDRESS
-    message['To'] = email_data['to']
-    message['Subject'] = email_data['subject']
-
-    message.attach(MIMEText(mail_content, 'plain'))
-
-    session = smtplib.SMTP('smtp.gmail.com', 587)
-    session.starttls()
-    session.login(SENDER_ADDRESS, SENDER_PASS)
-    text = message.as_string()
-    session.sendmail(SENDER_ADDRESS, email_data['to'], text)
-    session.quit()
-
-    print('Mail Sent')
-
-# @celery.task
-# def send_async_email(email_data):
-
-#     print("bro just print this")
-
-#     print (23-2-3)
 
 
 if __name__=='__main__':

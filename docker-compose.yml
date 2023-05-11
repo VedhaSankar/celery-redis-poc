@@ -21,7 +21,7 @@ services:
   worker:
     build: .
     hostname: celery-host
-    command: "celery -A app worker --loglevel=INFO"
+    command: "celery -A tasks worker --loglevel=INFO"
     volumes:
       - .:/app
     links:
