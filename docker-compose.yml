@@ -1,6 +1,6 @@
 version: '3'
 
-services:  
+services:
 
   redis:
     image: redis:latest
@@ -21,7 +21,7 @@ services:
   worker:
     build: .
     hostname: celery-host
-    command: "celery -A tasks worker --loglevel=INFO"
+    command: "celery -A app worker --loglevel=INFO"
     volumes:
       - .:/app
     links:
@@ -33,7 +33,7 @@ services:
     image: mher/flower
     hostname: flower-host
     environment:
-     - CELERY_BROKER_URL=redis://redis:6379
+      - CELERY_BROKER_URL=redis://redis:6379
     volumes:
       - .:/app
     ports:

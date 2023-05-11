@@ -24,7 +24,7 @@ app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
 app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
 
 # Create Celery instance
-celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+celery = Celery('app', broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
 
 SENDER_ADDRESS  = os.environ.get('GMAIL_USER') 
