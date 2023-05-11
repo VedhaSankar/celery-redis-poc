@@ -10,18 +10,22 @@ from dotenv import load_dotenv
 from email.mime.application import MIMEApplication
 import os
 from os.path import basename
+# from .celery import app as celery_app
 
+# __all__ = ['celery_app']
 app = Flask(__name__)
 mail= Mail(app)
-
-app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379'
-app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379'
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
 
-celery = Celery('app', broker='redis://localhost:6379', backend='redis://localhost:6379')
-# celery.config.update(app.config)
 
+# Celery configuration
+app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
+app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+
+# Create Celery instance
+celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
+celery.conf.update(app.config)
 
 SENDER_ADDRESS  = os.environ.get('GMAIL_USER') 
 SENDER_PASS     = os.environ.get('GMAIL_PASSWORD')
@@ -106,6 +110,14 @@ def send_async_email(email_data):
 
     print('Mail Sent')
 
+# @celery.task
+# def send_async_email(email_data):
+
+#     print("bro just print this")
+
+#     print (23-2-3)
+
+
 if __name__=='__main__':
 
-    app.run(debug = True, port=5000)
+    app.run(debug=True,host="0.0.0.0",port=8500)

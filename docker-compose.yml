@@ -1,0 +1,44 @@
+version: '3'
+
+services:  
+
+  redis:
+    image: redis:latest
+    hostname: redis
+
+  web:
+    build: .
+    hostname: web
+    volumes:
+      - .:/app
+    ports:
+      - "8500:8500"
+    links:
+      - redis
+      - worker
+      - flower
+
+  worker:
+    build: .
+    hostname: celery-host
+    command: "celery -A tasks worker --loglevel=INFO"
+    volumes:
+      - .:/app
+    links:
+      - redis
+    depends_on:
+      - redis
+
+  flower:
+    image: mher/flower
+    hostname: flower-host
+    environment:
+     - CELERY_BROKER_URL=redis://redis:6379
+    volumes:
+      - .:/app
+    ports:
+      - "5555:5555"
+    links:
+      - worker
+    depends_on:
+      - worker

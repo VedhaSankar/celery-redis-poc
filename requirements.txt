@@ -1,2 +1,7 @@
 flask
 celery
+flower
+Flask-Mail
+python-dotenv
+requests
+redis
