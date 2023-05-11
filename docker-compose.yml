@@ -14,22 +14,22 @@ services:
     ports:
       - "8500:8500"
     links:
+      - flower-worker
       - redis
-      - worker
-      - flower
+      - celery-worker
 
-  worker:
+  celery-worker:
     build: .
     hostname: celery-host
-    command: "celery -A tasks worker --loglevel=INFO"
+    command: 'celery -A tasks worker --loglevel=info'
     volumes:
       - .:/app
-    links:
-      - redis
     depends_on:
       - redis
+    links:
+      - redis
 
-  flower:
+  flower-worker:
     image: mher/flower
     hostname: flower-host
     environment:
@@ -37,8 +37,8 @@ services:
     volumes:
       - .:/app
     ports:
-      - "5555:5555"
-    links:
-      - worker
+      - '5555:5555'
     depends_on:
-      - worker
+      - celery-worker
+    links:
+      - celery-worker

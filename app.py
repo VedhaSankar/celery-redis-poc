@@ -11,6 +11,8 @@ from email.mime.application import MIMEApplication
 import os
 from os.path import basename
 
+load_dotenv()
+
 app = Flask(__name__)
 mail= Mail(app)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
