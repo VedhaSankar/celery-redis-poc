@@ -20,8 +20,6 @@ celery = Celery('tasks',
 @celery.task()
 def send_async_email(email_data):
 
-    print('plis werk')
-
     mail_content = email_data['body']
 
     message = MIMEMultipart()
