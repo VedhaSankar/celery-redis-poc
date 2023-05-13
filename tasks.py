@@ -14,8 +14,8 @@ SENDER_ADDRESS  = os.environ.get('GMAIL_USER')
 SENDER_PASS     = os.environ.get('GMAIL_PASSWORD')
 
 celery = Celery('tasks',
-                broker='redis://redis:6379',
-                backend='redis://redis:6379')
+                broker='redis://redis:6379/0',
+                backend='redis://redis:6379/0')
 
 @celery.task()
 def send_async_email(email_data):
