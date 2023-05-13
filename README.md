@@ -8,3 +8,7 @@ POC on Flask and Celery
    ```celery -A app.celery worker --loglevel=info ```
 4. Run flower:
    ```celery flower --port=5555```
+
+Running using Docker:
+
+```docker-compose up --build```
